@@ -19,14 +19,14 @@ class Simulator:
         if len(self.bankCards) == 0:
             self.bankCards = getDeck()
         card = self.bankCards[0]
-        np.delete(self.bankCards, 0)
+        self.bankCards = np.delete(self.bankCards, 0)
         return card
 
     def drawRiskCard(self):
         if len(self.riskCards) == 0:
             self.riskCards = getDeck()
         card = self.riskCards[0]
-        np.delete(self.riskCards, 0)
+        self.riskCards = np.delete(self.riskCards, 0)
         return card
 
     def run(self,rounds):
