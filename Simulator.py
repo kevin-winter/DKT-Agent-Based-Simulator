@@ -32,16 +32,21 @@ class Simulator:
 
     def run(self,rounds):
         for i in range(rounds):
-            for p in self.players:
-                if not p.dead:
-                    p.move()
-
-            self.moneytime.append([p.money for p in self.players])
-            if sum([not p.dead for p in self.players]) <= 1:
-                break
+            self.currentRound = i
+            done = self.runOneRound()
+            if done: break
 
         self.sumUpVisits()
         return
+
+    def runOneRound(self):
+        for p in self.players:
+            if not p.dead:
+                p.move()
+
+        self.moneytime.append([p.money for p in self.players])
+        if sum([not p.dead for p in self.players]) <= 1:
+            return 1
 
     def sumUpVisits(self):
         results = np.zeros(40)
@@ -55,7 +60,7 @@ class Simulator:
             4: Business(self, 4),
             5: Property(self, 5, [30, 150, 450, 850, 1050, 1200], [300, 200, 200], [6, 7]),
             6: Property(self, 6, [24, 110, 330, 700, 900, 1050], [250, 150, 140], [5, 7]),
-            7: Property(self, 7, [20, 100, 300, 600, 750, 950], [220, 130, 130], [6, 7]),
+            7: Property(self, 7, [20, 100, 300, 600, 750, 950], [220, 130, 130], [5, 6]),
             8: Route(self, 8),
             10: Property(self, 10, [6, 30, 90, 260, 380, 550], [100, 50, 50], [12]),
             12: Property(self, 12, [20, 100, 300, 600, 750, 950], [220, 160, 160], [10]),
@@ -79,8 +84,8 @@ class Simulator:
             35: Property(self, 35, [30, 150, 450, 850, 1050, 1200], [300, 200, 200], [36, 37]),
             36: Property(self, 36, [24, 110, 330, 700, 900, 1050], [250, 150, 140], [35, 37]),
             37: Property(self, 37, [30, 150, 450, 850, 1050, 1200], [300, 200, 200], [35, 36]),
-            39: Property(self, 39, [8, 40, 100, 300, 450, 600], [120, 50, 50], [40]),
-            40: Property(self, 40, [14, 70, 210, 500, 700, 850], [180, 100, 100], [39])
+            39: Property(self, 39, [8, 40, 100, 300, 450, 600], [120, 50, 50], [2, 40]),
+            40: Property(self, 40, [14, 70, 210, 500, 700, 850], [180, 100, 100], [2, 39])
         }
 
     def plotResults(self):

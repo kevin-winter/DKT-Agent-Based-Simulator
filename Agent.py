@@ -17,6 +17,9 @@ class Agent:
         self.s = simulator
         self.name = name
 
+    def summary(self):
+        return "{}: EUR {} {} {}".format(self.name, self.money, self.lastDice, "DEAD" if self.dead else "")
+
     def setCurrentPosition(self, field):
         self.visits[field-1] += 1
         self.currentPosition = field
@@ -83,7 +86,6 @@ class Agent:
         elif field == 31: True
         else:
             self.s.props[field].buyNpay(self)
-
 
     def handleRiskCard(self):
         card = self.s.drawRiskCard()
