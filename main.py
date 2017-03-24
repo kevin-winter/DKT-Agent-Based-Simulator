@@ -77,6 +77,7 @@ def plotTable(s):
 
 
 
+
 pygame.init()
 nrGames = 1
 nrPlayers = 2

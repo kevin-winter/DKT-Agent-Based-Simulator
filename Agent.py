@@ -18,10 +18,10 @@ class Agent:
         self.name = name
 
     def printSummary(self):
-        return "{}: EUR {} {} {}".format(*self.summary())
+        return "{}: EUR {} | EUR {} | {} | {}".format(*self.summary())
 
     def summary(self):
-        return self.name, self.money, self.lastDice, "DEAD" if self.dead else ""
+        return self.name, self.money, self.netWorth(), self.lastDice, "DEAD" if self.dead else ""
 
     def setCurrentPosition(self, field):
         self.visits[field-1] += 1
@@ -54,6 +54,16 @@ class Agent:
             return None
         ownValues = {p: p.valueForPlayer(self) for p in ownProps}
         return min(ownValues, key=ownValues.get)
+
+    def netWorth(self):
+        sum = self.money
+        ownProps = [p for p in self.s.props.values() if p.owner == self]
+        for p in ownProps:
+            if Property.__instancecheck__(p):
+                sum += p.price[0] + p.price[1] * p.houses + p.price[2] * p.hotel
+            else:
+                sum += 160
+        return sum
 
     def move(self):
         if self.roundsInJail != 0:

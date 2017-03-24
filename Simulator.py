@@ -12,6 +12,7 @@ class Simulator:
         self.players = []
         self.initProperties()
         self.moneytime = []
+        self.networthtime = []
         for i in range(nrPlayers):
             a = Agent(self, "Player{}".format(i))
             self.players.append(a)
@@ -45,6 +46,7 @@ class Simulator:
                 p.move()
 
         self.moneytime.append([p.money for p in self.players])
+        self.networthtime.append([p.netWorth() for p in self.players])
         self.sumUpVisits()
         if sum([not p.dead for p in self.players]) <= 1:
             return 1
@@ -90,8 +92,13 @@ class Simulator:
         }
 
     def plotResults(self):
-        fig, (ax1, ax2) = plt.subplots(nrows=2, facecolor='white')
+        fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, facecolor='white')
         fig.suptitle("Game Results", size=16)
+
+        ax0.plot(self.networthtime)
+        ax0.set_title('Players net worth over played rounds')
+        ax0.set_xlabel('rounds')
+        ax0.set_ylabel('net worth')
 
         ax1.plot(self.moneytime)
         ax1.set_title('Players money over played rounds')
