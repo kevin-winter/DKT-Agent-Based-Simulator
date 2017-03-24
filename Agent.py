@@ -17,8 +17,11 @@ class Agent:
         self.s = simulator
         self.name = name
 
+    def printSummary(self):
+        return "{}: EUR {} {} {}".format(*self.summary())
+
     def summary(self):
-        return "{}: EUR {} {} {}".format(self.name, self.money, self.lastDice, "DEAD" if self.dead else "")
+        return self.name, self.money, self.lastDice, "DEAD" if self.dead else ""
 
     def setCurrentPosition(self, field):
         self.visits[field-1] += 1

@@ -1,5 +1,6 @@
 from Simulator import Simulator
 import matplotlib.pyplot as plt
+import matplotlib.backends.backend_agg as agg
 import numpy as np
 import pygame
 from time import sleep
@@ -7,11 +8,14 @@ from pygame.locals import *
 import sys
 from game_constants import *
 from Property import Property
+import matplotlib
+matplotlib.use("Agg")
+plt.style.use('ggplot')
 
 playerCols = {}
 
 def initBoard(s):
-    DISPLAYSURF = pygame.display.set_mode((1500, 1000))
+    DISPLAYSURF = pygame.display.set_mode((1640, 1000))
     pygame.display.set_caption('DKT Simulator')
     for i, p in enumerate(s.players):
         playerCols[p] = COLS[i]
@@ -28,7 +32,7 @@ def updateBoard(s):
 def printStats(s):
     myfont = pygame.font.Font(None, 40)
     for i, p in enumerate(s.players):
-        label = myfont.render(p.summary(), 1, playerCols[p])
+        label = myfont.render(p.printSummary(), 1, playerCols[p])
         BOARD.blit(label, (1020, 20+i*50))
 
 def drawProperties(s):
@@ -47,15 +51,38 @@ def drawProperties(s):
 def offset(tup, offset):
     return tuple(map(sum, zip(tup, offset)))
 
+def plotResults(s):
+    fig = s.plotResults()
+    plotToCanvas(fig, (1000, 520))
+
+def plotToCanvas(fig, xy):
+    canvas = agg.FigureCanvasAgg(fig)
+    canvas.draw()
+    raw_data = canvas.get_renderer().tostring_rgb()
+    size = canvas.get_width_height()
+    graph = pygame.image.fromstring(raw_data, size, "RGB")
+    BOARD.blit(graph, xy)
+
+def plotTable(s):
+    data = s.playerData()
+    table = r'\begin{table} ' \
+            r'\begin{tabular}{|l|l|l|}  \hline  ' \
+            r'200 & 321 & 50 \\  \hline  ' \
+            r'\end{tabular} \end{table}'
+    fig = plt.figure()
+    ax=plt.gca()
+    plt.plot(np.arange(100))
+    plt.text(10,80,table, size=50)
+    plotToCanvas(fig, (1000, 0))
+
+
 
 pygame.init()
 nrGames = 1
-nrPlayers = 2
+nrPlayers = 3
 nrMaxRounds = 10000
 sim = Simulator(nrPlayers)
-
 BOARD = initBoard(sim)
-
 
 for i in range(nrMaxRounds):
     for event in pygame.event.get():
@@ -67,14 +94,12 @@ for i in range(nrMaxRounds):
     done = sim.runOneRound()
 
     updateBoard(sim)
+    #plotTable(sim)
+    plotResults(sim)
     pygame.display.update()
 
-    sleep(.2)
-    if done: break
-
-
-sim.sumUpVisits()
-sim.plotResults()
-
-
+    #sleep(.2)
+    if done:
+        sleep(10)
+        break
 

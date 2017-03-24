@@ -45,6 +45,7 @@ class Simulator:
                 p.move()
 
         self.moneytime.append([p.money for p in self.players])
+        self.sumUpVisits()
         if sum([not p.dead for p in self.players]) <= 1:
             return 1
 
@@ -89,7 +90,7 @@ class Simulator:
         }
 
     def plotResults(self):
-        fig, (ax1, ax2) = plt.subplots(nrows=2)
+        fig, (ax1, ax2) = plt.subplots(nrows=2, facecolor='white')
         fig.suptitle("Game Results", size=16)
 
         ax1.plot(self.moneytime)
@@ -104,4 +105,11 @@ class Simulator:
 
         fig.tight_layout()
         fig.subplots_adjust(top=0.88)
-        plt.show()
+        return fig
+
+    def playerData(self):
+        data = []
+        for p in self.players:
+            data.append(p.summary())
+
+        return np.asmatrix(data).T
