@@ -79,7 +79,7 @@ def plotTable(s):
 
 pygame.init()
 nrGames = 1
-nrPlayers = 3
+nrPlayers = 2
 nrMaxRounds = 10000
 sim = Simulator(nrPlayers)
 BOARD = initBoard(sim)
@@ -98,7 +98,6 @@ for i in range(nrMaxRounds):
     plotResults(sim)
     pygame.display.update()
 
-    #sleep(.2)
     if done:
         sleep(10)
         break

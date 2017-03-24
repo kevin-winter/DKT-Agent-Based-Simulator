@@ -27,3 +27,14 @@ class Business:
         agent.pay(payed)
         self.owner.money += payed
         print("{} - Pay {} Rent to {} for Business {}".format(agent.name, payed, self.owner.name, self.id))
+
+    def valueForPlayer(self, agent):
+        sumMine = sum([self.s.props[p].owner == agent for p in self.partners])
+        sumNone = sum([self.s.props[p].owner is None for p in self.partners])
+        sumOthers = sum([self.s.props[p].owner is not None and self.s.props[p].owner != agent for p in self.partners])
+        return sumMine * 2 + sumNone - sumOthers * 2
+
+    def sellTop(self, agent):
+        if self.owner == agent:
+            self.owner = None
+            agent.money += 80

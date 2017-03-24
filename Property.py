@@ -46,6 +46,23 @@ class Property:
         else:
             self.payRent(agent)
 
+    def sellTop(self, agent):
+        if self.owner == agent:
+            if self.hotel == 1:
+                self.hotel = 0
+                agent.money += int(self.price[2] / 2)
+                print("{} - Sell Hotel at {}".format(agent.name, self.id))
+
+            elif self.houses > 0:
+                self.houses -= 1
+                agent.money += int(self.price[1] / 2)
+                print("{} - Sell House at {}".format(agent.name, self.id))
+
+            else:
+                self.owner = None
+                agent.money += int(self.price[0] / 2)
+                print("{} - Sell Property {}".format(agent.name, self.id))
+
     def payRent(self, agent):
         if self.hotel == 1:
             payed = self.rent[5]
@@ -56,3 +73,9 @@ class Property:
             agent.pay(payed)
             self.owner.money += payed
         print("{} - Pay {} Rent to {} for Property {}".format(agent.name, payed, self.owner.name, self.id))
+
+    def valueForPlayer(self, agent):
+        sumMine = sum([self.s.props[p].owner == agent for p in self.partners])
+        sumNone = sum([self.s.props[p].owner is None for p in self.partners])
+        sumOthers = sum([self.s.props[p].owner is not None and self.s.props[p].owner != agent for p in self.partners])
+        return sumMine * 2 + sumNone - sumOthers * 2

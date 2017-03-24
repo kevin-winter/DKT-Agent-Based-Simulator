@@ -28,11 +28,32 @@ class Agent:
         self.currentPosition = field
 
     def pay(self, amount):
+        if self.dead:
+            return
+
         print("{} - Pay {}".format(self.name, amount))
         self.money -= amount
         if self.money < 0:
-            self.money = 0
+            self.sell()
+
+    def sell(self, pid=-1):
+        if pid in self.s.props:
+            if self.s.props[pid].owner == self:
+                self.s.props[pid].sellTop(self)
+        else:
+            p = self.selectInvaluableProperty()
+            if p:
+                p.sellTop(self)
+
+        self.pay(0)
+
+    def selectInvaluableProperty(self):
+        ownProps = [p for p in self.s.props.values() if p.owner == self]
+        if len(ownProps) == 0:
             self.dead = True
+            return None
+        ownValues = {p: p.valueForPlayer(self) for p in ownProps}
+        return min(ownValues, key=ownValues.get)
 
     def move(self):
         if self.roundsInJail != 0:
