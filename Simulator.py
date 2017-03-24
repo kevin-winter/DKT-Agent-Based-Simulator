@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from helpers import *
 from Agent import Agent
 from Property import Property
@@ -37,13 +38,16 @@ class Simulator:
 
             self.moneytime.append([p.money for p in self.players])
             if sum([not p.dead for p in self.players]) <= 1:
-                return
+                break
 
+        self.sumUpVisits()
+        return
+
+    def sumUpVisits(self):
         results = np.zeros(40)
         for p in self.players:
             results += p.visits
-
-        return results
+        self.visits = results
 
     def initProperties(self):
         self.props = {
@@ -78,3 +82,21 @@ class Simulator:
             39: Property(self, 39, [8, 40, 100, 300, 450, 600], [120, 50, 50], [40]),
             40: Property(self, 40, [14, 70, 210, 500, 700, 850], [180, 100, 100], [39])
         }
+
+    def plotResults(self):
+        fig, (ax1, ax2) = plt.subplots(nrows=2)
+        fig.suptitle("Game Results", size=16)
+
+        ax1.plot(self.moneytime)
+        ax1.set_title('Players money over played rounds')
+        ax1.set_xlabel('rounds')
+        ax1.set_ylabel('money')
+
+        ax2.bar(np.arange(40), self.visits/sum(self.visits))
+        ax2.set_title("Fields visited")
+        ax2.set_xlabel('fields')
+        ax2.set_ylabel('probability')
+
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.88)
+        plt.show()
