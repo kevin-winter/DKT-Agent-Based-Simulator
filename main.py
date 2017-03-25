@@ -7,9 +7,9 @@ matplotlib.use("Agg")
 plt.style.use('ggplot')
 
 # Simulation only
-s = Simulator(2)
-s.run(10000)
+s = Simulator(3)
+s.run()
 
 # Simulation + GUI
-#game = DKTGame(2)
+#game = DKTGame(3)
 #game.run()

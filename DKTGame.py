@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.backends.backend_agg as agg
 import numpy as np
 import pygame
+from pygame.locals import *
 from time import sleep
 import sys
 from game_constants import *
@@ -100,7 +101,7 @@ class DKTGame:
 
             self.updateBoard()
             #plotTable(sim)
-            self.plotResults()
+            #self.plotResults()
             pygame.display.update()
 
             if done:

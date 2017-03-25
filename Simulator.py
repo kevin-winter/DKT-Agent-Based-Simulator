@@ -41,7 +41,7 @@ class Simulator:
         self.riskCards = np.delete(self.riskCards, 0)
         return card
 
-    def run(self,rounds):
+    def run(self,rounds=10000):
         for i in range(rounds):
             self.currentRound = i
             done = self.runOneRound()
