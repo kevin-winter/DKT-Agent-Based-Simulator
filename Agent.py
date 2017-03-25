@@ -1,8 +1,8 @@
+from Property import Property
 import numpy as np
-from helpers import *
-
 
 class Agent:
+    JAIL = 31
 
     def __init__(self, simulator, name):
         self.visits = np.zeros(40)
@@ -65,6 +65,11 @@ class Agent:
                 sum += 160
         return sum
 
+    def rollDice(self):
+        rolls = np.random.randint(1,6,2)
+        return rolls[0] == rolls[1], sum(rolls)
+
+
     def move(self):
         if self.roundsInJail != 0:
             if self.jailFreeCard:
@@ -73,12 +78,12 @@ class Agent:
                 self.roundsInJail -= 1
                 return
 
-        dbl, eyes = rollDice()
+        dbl, eyes = self.rollDice()
         self.lastDice = eyes
         if dbl:
             self.doubleCount += 1
             if self.doubleCount == 3:
-                self.setCurrentPosition(JAIL)
+                self.setCurrentPosition(self.JAIL)
                 self.doubleCount = 0
                 self.roundsInJail = 2
             else:
@@ -112,7 +117,7 @@ class Agent:
         elif field == 33:
             self.money -= 80
         elif field == 11:
-            self.visit(JAIL)
+            self.visit(self.JAIL)
         elif field == 21:
             self.money -= min(350, int(self.money/10))
         elif field == 1:
@@ -133,7 +138,7 @@ class Agent:
         elif card == 2:
             self.jailFreeCard = True
         elif card == 3:
-            self.visit(JAIL)
+            self.visit(self.JAIL)
         elif card == 4:
             self.moveby(7)
         elif card == 5:
@@ -184,7 +189,7 @@ class Agent:
         if card == 0:
             self.visit(1)
         elif card == 1:
-            self.visit(JAIL)
+            self.visit(self.JAIL)
         elif card == 2:
             self.money += 20
         elif card == 3:

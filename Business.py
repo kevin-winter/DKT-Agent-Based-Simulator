@@ -1,5 +1,3 @@
-from helpers import *
-
 class Business:
     rent = [5, 10, 20]
     partners = [4, 14, 34]
