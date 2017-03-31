@@ -30,10 +30,10 @@ def updateBoard(s):
         pygame.draw.circle(BOARD, playerCols[p], offset(playerLocs[p.currentPosition],(i*5,i*5)), 20, 0)
 
 def printStats(s):
-    myfont = pygame.font.Font(None, 40)
+    myfont = pygame.font.Font(None, 25)
     for i, p in enumerate(s.players):
         label = myfont.render(p.printSummary(), 1, playerCols[p])
-        BOARD.blit(label, (1020, 20+i*50))
+        BOARD.blit(label, (1020, 20+i*30))
 
 def drawProperties(s):
     for p in s.props.values():
@@ -100,6 +100,6 @@ for i in range(nrMaxRounds):
     pygame.display.update()
 
     if done:
-        sleep(10)
         break
 
+sleep(20)
