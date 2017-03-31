@@ -1,5 +1,3 @@
-from helpers import *
-
 class Route:
     rent = [20, 40, 80, 160]
     partners = [8, 13, 18, 24]

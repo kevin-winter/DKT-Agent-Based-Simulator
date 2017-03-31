@@ -1,43 +1,54 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from helpers import *
 from Agent import Agent
 from Property import Property
+from Business import Business
+from Route import Route
+
 
 class Simulator:
 
     def __init__(self, nrPlayers):
-        self.riskCards = getDeck()
-        self.bankCards = getDeck()
         self.players = []
-        self.initProperties()
         self.moneytime = []
         self.networthtime = []
+        self.visits = []
+
+        self.riskCards = self.getDeck()
+        self.bankCards = self.getDeck()
+        self.initProperties()
+
         for i in range(nrPlayers):
             a = Agent(self, "Player{}".format(i))
             self.players.append(a)
 
+    def getDeck(self):
+        d = np.arange(16)
+        np.random.shuffle(d)
+        return d
+
     def drawBankCard(self):
         if len(self.bankCards) == 0:
-            self.bankCards = getDeck()
+            self.bankCards = self.getDeck()
         card = self.bankCards[0]
         self.bankCards = np.delete(self.bankCards, 0)
         return card
 
     def drawRiskCard(self):
         if len(self.riskCards) == 0:
-            self.riskCards = getDeck()
+            self.riskCards = self.getDeck()
         card = self.riskCards[0]
         self.riskCards = np.delete(self.riskCards, 0)
         return card
 
-    def run(self,rounds):
+    def run(self,rounds=10000):
         for i in range(rounds):
             self.currentRound = i
             done = self.runOneRound()
             if done: break
 
-        self.sumUpVisits()
+        fig = self.plotStats()
+        plt.show()
         return
 
     def runOneRound(self):
@@ -45,17 +56,15 @@ class Simulator:
             if not p.dead:
                 p.move()
 
-        self.moneytime.append([p.money for p in self.players])
-        self.networthtime.append([p.netWorth() for p in self.players])
-        self.sumUpVisits()
+        self.sumUpStats()
+
         if sum([not p.dead for p in self.players]) <= 1:
             return 1
 
-    def sumUpVisits(self):
-        results = np.zeros(40)
-        for p in self.players:
-            results += p.visits
-        self.visits = results
+    def sumUpStats(self):
+        self.visits = np.sum([p.visits for p in self.players], axis=0)
+        self.moneytime.append([p.money for p in self.players])
+        self.networthtime.append([p.netWorth() for p in self.players])
 
     def initProperties(self):
         self.props = {
@@ -91,28 +100,35 @@ class Simulator:
             40: Property(self, 40, [14, 70, 210, 500, 700, 850], [180, 100, 100], [2, 39])
         }
 
-    def plotResults(self):
+    def plotStats(self):
         fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, facecolor='white')
         fig.suptitle("Game Results", size=16)
 
-        ax0.plot(self.networthtime)
         ax0.set_title('Players net worth over played rounds')
         ax0.set_xlabel('rounds')
         ax0.set_ylabel('net worth')
+        ax0.plot(self.networthtime)
 
-        ax1.plot(self.moneytime)
         ax1.set_title('Players money over played rounds')
         ax1.set_xlabel('rounds')
         ax1.set_ylabel('money')
+        ax1.plot(self.moneytime)
 
-        ax2.bar(np.arange(40), self.visits/sum(self.visits))
         ax2.set_title("Fields visited")
         ax2.set_xlabel('fields')
         ax2.set_ylabel('probability')
+        ax2.bar(np.arange(40), self.visits/sum(self.visits))
 
         fig.tight_layout()
         fig.subplots_adjust(top=0.88)
+
         return fig
+
+    def updatePlot(self):
+        self.fig[1][0].plot(self.networthtime)
+        self.fig[1][1].plot(self.moneytime)
+        self.fig[1][2].bar(np.arange(40), self.visits/sum(self.visits))
+        return self.fig[0]
 
     def playerData(self):
         data = []

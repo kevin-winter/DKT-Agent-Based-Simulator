@@ -15,8 +15,7 @@ LIGHTYELLOW = (175, 175,  20)
 
 COLS = [BLACK, GRAY, RED, GREEN, BLUE, YELLOW, LIGHTBLUE, LIGHTGREEN, LIGHTRED, LIGHTYELLOW]
 
-BOARD_BG = pygame.image.load("DKT_small.png")
-HOUSES_BG = pygame.image.load("houses.png")
+BOARD_BG = pygame.image.load("DKT_small.bmp")
 
 playerLocs = {
     1	: (905, 905),
