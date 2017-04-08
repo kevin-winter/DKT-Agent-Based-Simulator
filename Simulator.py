@@ -58,7 +58,7 @@ class Simulator:
 
         self.sumUpStats()
 
-        if sum([not p.dead for p in self.players]) <= 1:
+        if sum([not p.dead for p in self.players]) <= 1 and len(self.players) != 1:
             return 1
 
     def sumUpStats(self):
