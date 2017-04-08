@@ -59,10 +59,10 @@ class Agent:
         sum = self.money
         ownProps = [p for p in self.s.props.values() if p.owner == self]
         for p in ownProps:
-            if Property.__instancecheck__(p):
+            if p.type == 0:
                 sum += p.price[0] + p.price[1] * p.houses + p.price[2] * p.hotel
             else:
-                sum += 160
+                sum += p.price[0]
         return sum
 
     def rollDice(self):

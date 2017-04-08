@@ -6,10 +6,13 @@ import matplotlib
 matplotlib.use("Agg")
 plt.style.use('ggplot')
 
-# Simulation only
-#s = Simulator(3)
-#s.run()
+nrPlayers = 2
+maxRounds = 1000
+gui = False
 
-# Simulation + GUI
-game = DKTGame(2)
-game.run()
+if gui:
+    game = DKTGame(2)
+    game.run(maxRounds)
+else:
+    s = Simulator(3)
+    s.run(maxRounds)

@@ -1,8 +1,9 @@
 import numpy as np
+PROPERTY, BUSINESS, ROUTE = 0, 1, 2
 
 class Property:
 
-    def __init__(self, simulator, id, rent, price, partners):
+    def __init__(self, simulator, id, rent, price, partners, type):
         self.houses = 0
         self.owner = None
         self.hotel = 0
@@ -11,15 +12,18 @@ class Property:
         self.partners = partners
         self.s = simulator
         self.id = id
+        self.type = type
 
     def canBuildHouse(self, money):
-        return np.all([self.owner == self.s.props[p].owner for p in self.partners]) \
+        return self.type == PROPERTY \
+               and np.all([self.owner == self.s.props[p].owner for p in self.partners]) \
                and np.all([self.houses <= self.s.props[p].houses for p in self.partners]) \
                and self.houses < 4 \
                and money >= self.price[1]
 
     def canBuildHotel(self, money):
-        return np.all([self.owner == self.s.props[p].owner for p in self.partners]) \
+        return self.type == PROPERTY \
+               and np.all([self.owner == self.s.props[p].owner for p in self.partners]) \
                and np.all([4 == self.s.props[p].houses for p in self.partners]) \
                and self.houses == 4 \
                and self.hotel == 0 \
@@ -69,9 +73,18 @@ class Property:
             agent.pay(payed)
             self.owner.money += payed
         else:
-            payed = self.rent[self.houses]
+            if self.type != PROPERTY:
+                nrLines = sum([self.s.props[x].owner == self.owner for x in self.partners])
+                if self.type == BUSINESS:
+                    payed = agent.lastDice * self.rent[nrLines - 1]
+                elif self.type == ROUTE:
+                    payed = self.rent[nrLines - 1]
+            else:
+                payed = self.rent[self.houses]
+
             agent.pay(payed)
             self.owner.money += payed
+
         print("{} - Pay {} Rent to {} for Property {}".format(agent.name, payed, self.owner.name, self.id))
 
     def valueForPlayer(self, agent):
