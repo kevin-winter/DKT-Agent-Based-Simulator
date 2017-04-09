@@ -11,8 +11,8 @@ maxRounds = 1000
 gui = False
 
 if gui:
-    game = DKTGame(2)
-    game.run(maxRounds)
+    game = DKTGame(2, maxRounds)
+    game.run()
 else:
     s = Simulator(3)
     s.run(maxRounds)

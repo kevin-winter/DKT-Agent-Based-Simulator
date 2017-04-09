@@ -6,7 +6,7 @@ from Property import Property
 
 class Simulator:
 
-    def __init__(self, nrPlayers):
+    def __init__(self, nrPlayers, verbose=True):
         self.players = []
         self.moneytime = []
         self.networthtime = []
@@ -15,6 +15,7 @@ class Simulator:
         self.riskCards = self.getDeck()
         self.bankCards = self.getDeck()
         self.initProperties()
+        self.verbose = verbose
 
         for i in range(nrPlayers):
             a = Agent(self, "Player{}".format(i))
@@ -39,15 +40,16 @@ class Simulator:
         self.riskCards = np.delete(self.riskCards, 0)
         return card
 
-    def run(self,rounds=10000):
+    def run(self, rounds=10000, showResults=True):
         for i in range(rounds):
             self.currentRound = i
-            done = self.runOneRound()
-            if done: break
+            winner = self.runOneRound()
+            if winner: break
 
-        fig = self.plotStats()
-        plt.show()
-        return
+        if showResults:
+            fig = self.plotStats()
+            plt.show()
+        return winner
 
     def runOneRound(self):
         for p in self.players:
@@ -57,7 +59,7 @@ class Simulator:
         self.sumUpStats()
 
         if sum([not p.dead for p in self.players]) <= 1 and len(self.players) != 1:
-            return 1
+            return [p for p in self.players if not p.dead][0]
 
     def sumUpStats(self):
         self.visits = np.sum([p.visits for p in self.players], axis=0)
@@ -90,13 +92,14 @@ class Simulator:
             29: Property(self, 29, [10, 50, 150, 450, 600, 730], [140, 100, 100], [30, 32], 0),
             30: Property(self, 30, [16, 80, 230, 550, 710, 900], [200, 110, 110], [29, 32], 0),
             32: Property(self, 32, [18, 90, 250, 600, 730, 930], [210, 120, 150], [29, 30], 0),
-            34: Property(self, 34, [5, 10, 20], [160], [4, 34], 1),
+            34: Property(self, 34, [5, 10, 20], [160], [4, 14], 1),
             35: Property(self, 35, [30, 150, 450, 850, 1050, 1200], [300, 200, 200], [36, 37], 0),
             36: Property(self, 36, [24, 110, 330, 700, 900, 1050], [250, 150, 140], [35, 37], 0),
             37: Property(self, 37, [30, 150, 450, 850, 1050, 1200], [300, 200, 200], [35, 36], 0),
             39: Property(self, 39, [8, 40, 100, 300, 450, 600], [120, 50, 50], [2, 40], 0),
             40: Property(self, 40, [14, 70, 210, 500, 700, 850], [180, 100, 100], [2, 39], 0)
         }
+        self.groups = np.unique([sorted(v.partners + [k]) for k, v in self.props.items()])
 
     def plotStats(self):
         fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, facecolor='white')

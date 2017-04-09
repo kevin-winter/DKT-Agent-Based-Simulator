@@ -1,6 +1,8 @@
 from Property import Property
 import numpy as np
 
+MANUAL, AUTO, AI, RANDOM = 0, 1, 2, 4
+
 class Agent:
     JAIL = 31
 
@@ -16,6 +18,8 @@ class Agent:
         self.lastDice = 0
         self.s = simulator
         self.name = name
+        self.control = 4
+        self.learner = None
 
     def printSummary(self):
         return "{}: EUR {} | EUR {} | {} | {}".format(*self.summary())
@@ -31,7 +35,7 @@ class Agent:
         if self.dead:
             return
 
-        print("{} - Pay {}".format(self.name, amount))
+        if self.s.verbose: print("{} - Pay {}".format(self.name, amount))
         self.money -= amount
         if self.money < 0:
             self.sell()
@@ -65,6 +69,25 @@ class Agent:
                 sum += p.price[0]
         return sum
 
+    def rentWorth(self):
+        rentsum = 0
+        ownProps = [p for p in self.s.props.values() if p.owner == self]
+        for p in ownProps:
+            if p.hotel == 1:
+                payed = p.rent[5]
+            else:
+                if p.type != 0:
+                    nrLines = sum([self.s.props[x].owner == p.owner for x in p.partners])
+                    if p.type == 1:
+                        payed = self.lastDice * p.rent[nrLines - 1]
+                    elif p.type == 2:
+                        payed = p.rent[nrLines - 1]
+                else:
+                    payed = p.rent[p.houses]
+
+            rentsum += payed
+        return rentsum
+
     def rollDice(self):
         rolls = np.random.randint(1,6,2)
         return rolls[0] == rolls[1], sum(rolls)
@@ -92,7 +115,7 @@ class Agent:
         else:
             self.moveby(eyes)
 
-        print("{} - MONEY: {}".format(self.name, self.money))
+        if self.s.verbose: print("{} - MONEY: {}".format(self.name, self.money))
 
     def moveby(self, d):
         field = self.currentPosition + d
@@ -108,7 +131,7 @@ class Agent:
 
     def visit(self, field):
         self.setCurrentPosition(field)
-        print("{} - Move to Field {}".format(self.name, field))
+        if self.s.verbose: print("{} - Move to Field {}".format(self.name, field))
 
         if field in [3, 23, 38]:
             self.handleRiskCard()
@@ -126,9 +149,47 @@ class Agent:
         else:
             self.s.props[field].buyNpay(self)
 
+    def wantToBuy(self, p, price):
+        if self.control == AUTO:
+            return True
+        elif self.control == AI:
+            return self.learner.decide(self.getObservations(p, price))
+        elif self.control == MANUAL:
+            while True:
+                try:
+                    q = "{}: Do you want to buy Property {} for {}$ from {}"\
+                        .format(self.name, p.id, price, "the bank" if p.owner is None else p.owner.name)
+                    return {"y":True, "n":False}[input(q).lower()]
+                except KeyError:
+                    print("Invalid input, please enter y or n!")
+        elif self.control == RANDOM:
+            return np.random.choice([True, False])
+
+    def getReward(self, old):
+        return self.netWorth() / sum([p.netWorth() for p in self.s.players]) \
+        + (len(self.s.players) * (self.rentWorth()+1)) / sum([(p.rentWorth()+1) * len(self.s.players) for p in self.s.players])
+
+    def getObservations(self, p=None, price=None):
+        ownerships = np.array([np.mean([[self.s.props[p].owner == self,
+                   self.s.props[p].owner not in (None, self),
+                   np.max([self.s.props[p].owner == i for i in self.s.players if i != self])]
+                  for p in gr], axis=0) for gr in self.s.groups])
+
+        finance = np.array([self.money / sum([p.money for p in self.s.players]),
+                  self.netWorth() / sum([p.netWorth() for p in self.s.players])])
+
+        if p is None:
+            saleInfo = np.array([0, 1, 1])
+        else:
+            saleInfo = np.array([price / self.money, price / p.price[0],
+                                 [p.id in a for a in self.s.groups].index(True) / 12])
+
+        observations = np.concatenate((ownerships.flatten(), finance, saleInfo))
+        return observations
+
     def handleRiskCard(self):
         card = self.s.drawRiskCard()
-        print("{} - Risk Card {} drawn".format(self.name, card))
+        if self.s.verbose: print("{} - Risk Card {} drawn".format(self.name, card))
         if card == 0:
             self.moveby(-4)
         elif card == 1:
@@ -185,7 +246,7 @@ class Agent:
 
     def handleBankCard(self):
         card = self.s.drawBankCard()
-        print("{} - Bank Card {} drawn".format(self.name, card))
+        if self.s.verbose: print("{} - Bank Card {} drawn".format(self.name, card))
         if card == 0:
             self.visit(1)
         elif card == 1:

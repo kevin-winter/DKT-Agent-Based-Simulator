@@ -33,20 +33,24 @@ class Property:
         return money >= self.price[0]
 
     def buyNpay(self, agent):
+        old = agent.getReward(0)
         if self.owner is None:
-            if self.canBuyProperty(agent.money):
+            if self.canBuyProperty(agent.money) and agent.wantToBuy(self, self.price[0]):
                 agent.pay(self.price[0])
                 self.owner = agent
-                print("{} - Buy Property {}".format(agent.name, self.id))
+                if self.s.verbose: print("{} - Buy Property {}".format(agent.name, self.id))
+                if agent.learner != None: agent.learner.react(agent.getReward(old))
         elif self.owner == agent:
-            if self.canBuildHouse(agent.money):
+            if self.canBuildHouse(agent.money) and agent.wantToBuy(self, self.price[1]):
                 agent.pay(self.price[1])
                 self.houses += 1
-                print("{} - Buy House at {}".format(agent.name, self.id))
-            elif self.canBuildHotel(agent.money):
+                if self.s.verbose: print("{} - Buy House at {}".format(agent.name, self.id))
+                if agent.learner != None: agent.learner.react(agent.getReward(old))
+            elif self.canBuildHotel(agent.money) and agent.wantToBuy(self, self.price[2]):
                 agent.pay(self.price[2])
                 self.hotel = 1
-                print("{} - Buy Hotel at {}".format(agent.name, self.id))
+                if self.s.verbose: print("{} - Buy Hotel at {}".format(agent.name, self.id))
+                if agent.learner != None: agent.learner.react(agent.getReward(old))
         else:
             self.payRent(agent)
 
@@ -55,17 +59,17 @@ class Property:
             if self.hotel == 1:
                 self.hotel = 0
                 agent.money += int(self.price[2] / 2)
-                print("{} - Sell Hotel at {}".format(agent.name, self.id))
+                if self.s.verbose: print("{} - Sell Hotel at {}".format(agent.name, self.id))
 
             elif self.houses > 0:
                 self.houses -= 1
                 agent.money += int(self.price[1] / 2)
-                print("{} - Sell House at {}".format(agent.name, self.id))
+                if self.s.verbose: print("{} - Sell House at {}".format(agent.name, self.id))
 
             else:
                 self.owner = None
                 agent.money += int(self.price[0] / 2)
-                print("{} - Sell Property {}".format(agent.name, self.id))
+                if self.s.verbose: print("{} - Sell Property {}".format(agent.name, self.id))
 
     def payRent(self, agent):
         if self.hotel == 1:
@@ -85,7 +89,7 @@ class Property:
             agent.pay(payed)
             self.owner.money += payed
 
-        print("{} - Pay {} Rent to {} for Property {}".format(agent.name, payed, self.owner.name, self.id))
+        if self.s.verbose: print("{} - Pay {} Rent to {} for Property {}".format(agent.name, payed, self.owner.name, self.id))
 
     def valueForPlayer(self, agent):
         sumMine = sum([self.s.props[p].owner == agent for p in self.partners])
