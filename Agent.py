@@ -167,7 +167,7 @@ class Agent:
 
     def getReward(self, old):
         return self.netWorth() / sum([p.netWorth() for p in self.s.players]) \
-        + (len(self.s.players) * (self.rentWorth()+1)) / sum([(p.rentWorth()+1) * len(self.s.players) for p in self.s.players])
+        + (len(self.s.players) * (self.rentWorth()+1)) / sum([(p.rentWorth()+1) * len(self.s.players) for p in self.s.players]) - old
 
     def getObservations(self, p=None, price=None):
         ownerships = np.array([np.mean([[self.s.props[p].owner == self,

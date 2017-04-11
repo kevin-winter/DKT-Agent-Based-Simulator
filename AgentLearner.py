@@ -7,6 +7,7 @@ import numpy.random as rd
 import matplotlib.pyplot as plt
 from tf_tools import variable_summaries, parameter_summaries
 from Simulator import Simulator
+from DKTGame import DKTGame
 
 MANUAL, AUTO, AI = 0, 1, 2
 
@@ -15,11 +16,11 @@ class AgentLearner:
     n_actions = 2
     n_obs = 35
 
-    print_per_episode = 10
+    print_per_episode = 50
 
-    max_episode_len = 1000
+    max_episode_len = 500
     batch_size = 200
-    n_train_trials = 200
+    n_train_trials = 1000
     n_test_trials = 100
     gamma = 0.9999
     learning_rate = 0.01
@@ -37,7 +38,7 @@ class AgentLearner:
         self.discounted_rewards_holder = tf.placeholder(dtype=tf.float32, shape=None, name='symbolic_reward')
 
         with tf.name_scope('linear_policy'):
-            nr_hidden = 10
+            nr_hidden = 20
 
             w0 = np.array(rd.randn(self.n_obs, nr_hidden) / np.sqrt(self.n_obs),dtype=np.float32)
             b0 = np.zeros(nr_hidden, dtype=np.float32)
@@ -70,7 +71,7 @@ class AgentLearner:
             self.testing_action_choice = tf.argmax(self.action_probabilities, dimension=1, name='testing_action_choice')
 
         with tf.name_scope('loss'):
-            log_probabilities = tf.log(tf.reduce_sum(tf.mul(self.action_probabilities, self.actions_one_hot_holder), 1), name='log_probabilities')
+            log_probabilities = tf.log(tf.reduce_sum(tf.multiply(self.action_probabilities, self.actions_one_hot_holder), 1), name='log_probabilities')
             variable_summaries(log_probabilities, '/log_probabilities')
 
             sum_of_probabilities = tf.reduce_sum(log_probabilities, name='sum_of_probabilities')
@@ -79,24 +80,55 @@ class AgentLearner:
             sum_of_rewards = tf.reduce_sum(self.discounted_rewards_holder, name='sum_of_rewards')
             variable_summaries(sum_of_rewards, '/sum_of_rewards')
 
-            pos_loss = tf.mul(sum_of_probabilities, sum_of_rewards, name='positive_loss')
+            pos_loss = tf.multiply(sum_of_probabilities, sum_of_rewards, name='positive_loss')
             variable_summaries(pos_loss, '/pos_loss')
 
-            L_theta = tf.neg(pos_loss, name='L_theta')
+            L_theta = tf.negative(pos_loss, name='L_theta')
             variable_summaries(L_theta, '/L_theta')
 
         with tf.name_scope('train'):
             self.gd_opt = tf.train.AdamOptimizer(self.learning_rate).minimize(L_theta)
 
         self.sess = tf.Session()
-        self.merged = tf.merge_all_summaries()
+        self.merged = tf.summary.merge_all()
         suffix = time.strftime('%Y-%m-%d--%H-%M-%S')
-        self.train_writer = tf.train.SummaryWriter('tensorboard/DKT/{}'.format(suffix) + '/train', self.sess.graph)
-        self.test_writer = tf.train.SummaryWriter('tensorboard/DKT/{}'.format(suffix) + '/test')
+        self.train_writer = tf.summary.FileWriter('tensorboard/DKT/{}'.format(suffix) + '/train', self.sess.graph)
+        self.test_writer = tf.summary.FileWriter('tensorboard/DKT/{}'.format(suffix) + '/test')
 
         self.sess.run(tf.initialize_all_variables())
-        self.train = True
 
+    def run(self, train=True, gui=False):
+        self.reset()
+        self.train = train
+        while self.episode_no <= (self.n_train_trials if self.train else self.n_test_trials):
+            if gui:
+                self.game = DKTGame(nrPlayers=3, nrMaxRounds=self.max_episode_len)
+                self.sim = self.game.s
+            else:
+                self.sim = Simulator(3, verbose=False)
+            self.agent = self.sim.players[0]
+            self.agent.control = AI
+            self.agent.learner = self
+            self.done = False
+
+            winner = self.game.run() if gui else self.sim.run(showResults=False, rounds=1000)
+            self.done = True
+            self.decide(self.agent.getObservations())
+            if self.agent == winner:
+                self.gamesWon += 1
+                self.react(10)
+            elif winner is None:
+                self.react(0)
+            else:
+                self.react(-10)
+
+        self.plotResults(self.train)
+
+    def trainNtest(self, gui=False):
+        self.run()
+        self.run(False, gui)
+
+    def reset(self):
         self.batch_rewards = []
         self.states = []
         self.action_one_hots = []
@@ -108,29 +140,7 @@ class AgentLearner:
         self.step = 0
         self.episode_no = 0
         self.done = False
-
-    def run(self):
-        while self.episode_no <= (self.n_train_trials if self.train else self.n_test_trials):
-            self.sim = Simulator(3, verbose=False)
-            self.agent = self.sim.players[0]
-            self.agent.control = AI
-            self.agent.learner = self
-            self.done = False
-
-            winner = self.sim.run(showResults=False, rounds=1000)
-            self.done = True
-            self.decide(self.agent.getObservations())
-            if self.agent == winner:
-                self.react(100)
-            elif winner is None:
-                self.react(0)
-            else:
-                self.react(-100)
-
-
-        self.plotResults(self.train)
-        plt.show()
-
+        self.gamesWon = 0
 
     def plotResults(self, train=False):
         if train: plt.figure()
@@ -139,6 +149,8 @@ class AgentLearner:
         ax.set_title("Training" if train else "Testing" + " rewards")
         ax.set_xlabel('Episode number')
         ax.set_ylabel('Episode reward')
+        if not self.train:
+            plt.show()
 
     def decide(self, observation):
         self.step = self.sim.currentRound
@@ -197,6 +209,8 @@ class AgentLearner:
             self.step = 0
 
             if self.episode_no % self.print_per_episode == 0:
+                print("{} of {} games won!".format(self.gamesWon, self.print_per_episode))
+                self.gamesWon = 0
                 print("Episode {}: Average steps in last {} episodes".format(self.episode_no, self.print_per_episode),
                       np.mean(self.episode_steps_list[(self.episode_no - self.print_per_episode):self.episode_no]), '+-',
                       np.std(self.episode_steps_list[(self.episode_no - self.print_per_episode):self.episode_no])
@@ -205,4 +219,5 @@ class AgentLearner:
 
 if __name__ == "__main__":
     learner = AgentLearner()
-    learner.run()
+    withGUI = False
+    learner.trainNtest(withGUI)

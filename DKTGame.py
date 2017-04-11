@@ -20,7 +20,7 @@ class DKTGame:
         self.playerCols = {}
         self.nrPlayers = nrPlayers
         self.nrMaxRounds = nrMaxRounds
-        self.s = Simulator(self.nrPlayers)
+        self.s = Simulator(self.nrPlayers, verbose=False)
         self.BOARD = self.initBoard()
 
     def initBoard(self):
@@ -105,6 +105,6 @@ class DKTGame:
             pygame.display.update()
 
             if done:
-                sleep(10)
+                sleep(1)
                 break
-
+        return done
