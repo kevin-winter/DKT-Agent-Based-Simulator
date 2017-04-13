@@ -1,7 +1,7 @@
 from Property import Property
 import numpy as np
+from game_constants import *
 
-MANUAL, AUTO, AI, RANDOM = 0, 1, 2, 4
 
 class Agent:
     JAIL = 31
@@ -18,23 +18,20 @@ class Agent:
         self.lastDice = 0
         self.s = simulator
         self.name = name
-        self.control = 4
+        self.control = np.random.choice([RANDOM, AUTO])
         self.learner = None
 
     def printSummary(self):
-        return "{}: EUR {} | EUR {} | {} | {}".format(*self.summary())
+        return SUMMARY_FORMAT.format(*self.summary())
 
     def summary(self):
-        return self.name, self.money, self.netWorth(), self.lastDice, "DEAD" if self.dead else ""
+        return self.name, self.money, self.netWorth(), self.rentWorth(), self.lastDice, "DEAD" if self.dead else ""
 
     def setCurrentPosition(self, field):
         self.visits[field-1] += 1
         self.currentPosition = field
 
     def pay(self, amount):
-        if self.dead:
-            return
-
         if self.s.verbose: print("{} - Pay {}".format(self.name, amount))
         self.money -= amount
         if self.money < 0:
@@ -48,13 +45,15 @@ class Agent:
             p = self.selectInvaluableProperty()
             if p:
                 p.sellTop(self)
-
-        self.pay(0)
+            else:
+                self.dead = True
+                return
+        if self.money < 0:
+            self.sell()
 
     def selectInvaluableProperty(self):
         ownProps = [p for p in self.s.props.values() if p.owner == self]
         if len(ownProps) == 0:
-            self.dead = True
             return None
         ownValues = {p: p.valueForPlayer(self) for p in ownProps}
         return min(ownValues, key=ownValues.get)
@@ -79,7 +78,7 @@ class Agent:
                 if p.type != 0:
                     nrLines = sum([self.s.props[x].owner == p.owner for x in p.partners])
                     if p.type == 1:
-                        payed = self.lastDice * p.rent[nrLines - 1]
+                        payed = 6 * p.rent[nrLines - 1]
                     elif p.type == 2:
                         payed = p.rent[nrLines - 1]
                 else:

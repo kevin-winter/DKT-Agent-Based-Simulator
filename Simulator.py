@@ -1,8 +1,10 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from Agent import Agent
 from Property import Property
-
+from game_constants import *
+BANK, RISK = 0, 1
 
 class Simulator:
 
@@ -10,15 +12,16 @@ class Simulator:
         self.players = []
         self.moneytime = []
         self.networthtime = []
+        self.rentworthtime = []
         self.visits = []
+        self.currentRound = 0
 
-        self.riskCards = self.getDeck()
-        self.bankCards = self.getDeck()
+        self.decks = [self.getDeck(), self.getDeck()]
         self.initProperties()
         self.verbose = verbose
 
         for i in range(nrPlayers):
-            a = Agent(self, "Player{}".format(i))
+            a = Agent(self, "Player {}".format(i))
             self.players.append(a)
 
     def getDeck(self):
@@ -27,17 +30,16 @@ class Simulator:
         return d
 
     def drawBankCard(self):
-        if len(self.bankCards) == 0:
-            self.bankCards = self.getDeck()
-        card = self.bankCards[0]
-        self.bankCards = np.delete(self.bankCards, 0)
-        return card
+        return self.drawCard(BANK)
 
     def drawRiskCard(self):
-        if len(self.riskCards) == 0:
-            self.riskCards = self.getDeck()
-        card = self.riskCards[0]
-        self.riskCards = np.delete(self.riskCards, 0)
+        return self.drawCard(RISK)
+
+    def drawCard(self, type):
+        if len(self.decks[type]) == 0:
+            self.decks[type] = self.getDeck()
+        card = self.decks[type][0]
+        self.decks[type] = np.delete(self.decks[type], 0)
         return card
 
     def run(self, rounds=10000, showResults=True):
@@ -65,6 +67,33 @@ class Simulator:
         self.visits = np.sum([p.visits for p in self.players], axis=0)
         self.moneytime.append([p.money for p in self.players])
         self.networthtime.append([p.netWorth() for p in self.players])
+        self.rentworthtime.append([p.rentWorth() for p in self.players])
+
+    def plotStats(self):
+        mpl.rcParams['figure.figsize'] = np.array([6.4/SCALE, 6.4/SCALE])
+        plt.close("all")
+        fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, facecolor='white')
+        fig.suptitle("Game Results", size=16)
+
+        ax0.set_title('Players assets over played rounds')
+        ax0.set_xlabel('Rounds')
+        ax0.set_ylabel('Assets')
+        ax0.plot(self.networthtime)
+
+        ax1.set_title('Players rent worth over played rounds')
+        ax1.set_xlabel('Rounds')
+        ax1.set_ylabel('Rent Worth')
+        ax1.plot(self.rentworthtime)
+
+        ax2.set_title("Fields visited")
+        ax2.set_xlabel('Fields')
+        ax2.set_ylabel('Probability')
+        ax2.bar(np.arange(40), self.visits / sum(self.visits))
+
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.88)
+
+        return fig
 
     def initProperties(self):
         self.props = {
@@ -101,39 +130,3 @@ class Simulator:
         }
         self.groups = np.unique([sorted(v.partners + [k]) for k, v in self.props.items()])
 
-    def plotStats(self):
-        fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, facecolor='white')
-        fig.suptitle("Game Results", size=16)
-
-        ax0.set_title('Players net worth over played rounds')
-        ax0.set_xlabel('rounds')
-        ax0.set_ylabel('net worth')
-        ax0.plot(self.networthtime)
-
-        ax1.set_title('Players money over played rounds')
-        ax1.set_xlabel('rounds')
-        ax1.set_ylabel('money')
-        ax1.plot(self.moneytime)
-
-        ax2.set_title("Fields visited")
-        ax2.set_xlabel('fields')
-        ax2.set_ylabel('probability')
-        ax2.bar(np.arange(40), self.visits/sum(self.visits))
-
-        fig.tight_layout()
-        fig.subplots_adjust(top=0.88)
-
-        return fig
-
-    def updatePlot(self):
-        self.fig[1][0].plot(self.networthtime)
-        self.fig[1][1].plot(self.moneytime)
-        self.fig[1][2].bar(np.arange(40), self.visits/sum(self.visits))
-        return self.fig[0]
-
-    def playerData(self):
-        data = []
-        for p in self.players:
-            data.append(p.summary())
-
-        return np.asmatrix(data).T

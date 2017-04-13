@@ -1,14 +1,9 @@
-from Simulator import Simulator
 from DKTGame import DKTGame
-
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use("Agg")
-plt.style.use('ggplot')
+from Simulator import Simulator
 
 nrPlayers = 2
 maxRounds = 1000
-gui = False
+gui = True
 
 if gui:
     game = DKTGame(2, maxRounds)

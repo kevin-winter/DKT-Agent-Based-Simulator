@@ -8,9 +8,7 @@ import matplotlib.pyplot as plt
 from tf_tools import variable_summaries, parameter_summaries
 from Simulator import Simulator
 from DKTGame import DKTGame
-
-MANUAL, AUTO, AI = 0, 1, 2
-
+from game_constants import *
 
 class AgentLearner:
     n_actions = 2
