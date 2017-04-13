@@ -10,8 +10,6 @@ def scale(tup):
 def s(size):
     return int(size*SCALE)
 
-RANDOM, AUTO, AI, MANUAL  = 0, 1, 2, 3
-
 #           R       G       B
 WHITE   = ( 255 ,   255 ,   255 )
 BLACK   = ( 0   ,   0   ,   0   )
@@ -33,9 +31,7 @@ COLS = [BLACK, RED, GREEN, BLUE, MAROON, OLIVE, LIME, AQUA, TEAL, NAVY, FUCHSIA,
 
 SCALE = 0.8
 BOARD_SIZE = scale((1640, 1000))
-BOARD_BG = pygame.transform.rotozoom(pygame.image.load("DKT_small.bmp"), 0, SCALE)
-
-SUMMARY_FORMAT = "{0:10}: {1:>6} {2:>8} {3:>5} {4:4} {5}"
+BOARD_BG = pygame.transform.rotozoom(pygame.image.load("gui/DKT_small.bmp"), 0, SCALE)
 
 p_a = np.array([2]*11+[1]*9+[0]*11+[1]*9)
 p_b = np.array([8]*11+list(np.arange(9)[::-1])+[0]*11+list(np.arange(9)))

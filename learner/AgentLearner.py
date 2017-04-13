@@ -1,14 +1,14 @@
 import time
 
-import numpy as np
-import tensorflow as tf
-import numpy.random as rd
-
 import matplotlib.pyplot as plt
-from tf_tools import variable_summaries, parameter_summaries
-from Simulator import Simulator
-from DKTGame import DKTGame
-from game_constants import *
+import numpy.random as rd
+import tensorflow as tf
+
+from gui.DKTGame import DKTGame
+from gui.game_constants import *
+from simulator.simulation_constants import *
+from simulator.Simulator import Simulator
+from learner.tf_tools import variable_summaries, parameter_summaries
 
 class AgentLearner:
     n_actions = 2
@@ -35,7 +35,7 @@ class AgentLearner:
 
         self.discounted_rewards_holder = tf.placeholder(dtype=tf.float32, shape=None, name='symbolic_reward')
 
-        with tf.name_scope('linear_policy'):
+        with tf.name_scope('non-linear_policy'):
             nr_hidden = 20
 
             w0 = np.array(rd.randn(self.n_obs, nr_hidden) / np.sqrt(self.n_obs),dtype=np.float32)
@@ -95,21 +95,22 @@ class AgentLearner:
 
         self.sess.run(tf.initialize_all_variables())
 
-    def run(self, train=True, gui=False):
+    def run(self, train=True, gui=False, nrPlayers=3, nrMaxRounds=10000):
         self.reset()
         self.train = train
+        self.max_episode_len = nrMaxRounds
         while self.episode_no <= (self.n_train_trials if self.train else self.n_test_trials):
             if gui:
-                self.game = DKTGame(nrPlayers=3, nrMaxRounds=self.max_episode_len)
+                self.game = DKTGame(nrPlayers=nrPlayers, nrMaxRounds=self.max_episode_len)
                 self.sim = self.game.s
             else:
-                self.sim = Simulator(3, verbose=False)
+                self.sim = Simulator(nrPlayers, verbose=False)
             self.agent = self.sim.players[0]
             self.agent.control = AI
             self.agent.learner = self
             self.done = False
 
-            winner = self.game.run() if gui else self.sim.run(showResults=False, rounds=1000)
+            winner = self.game.run() if gui else self.sim.run(showResults=False, rounds=self.max_episode_len)
             self.done = True
             self.decide(self.agent.getObservations())
             if self.agent == winner:
@@ -122,9 +123,9 @@ class AgentLearner:
 
         self.plotResults(self.train)
 
-    def trainNtest(self, gui=False):
-        self.run()
-        self.run(False, gui)
+    def trainNtest(self, testgui=False, nrPlayers=3, nrMaxRounds=10000):
+        self.run(train=True, gui=False, nrPlayers=nrPlayers, nrMaxRounds=nrMaxRounds)
+        self.run(train=False, gui=testgui, nrPlayers=nrPlayers, nrMaxRounds=nrMaxRounds)
 
     def reset(self):
         self.batch_rewards = []
@@ -161,7 +162,6 @@ class AgentLearner:
             action_arr[action] = 1.
             self.action_one_hots.append(action_arr)
 
-            # Record states
             self.states.append(observation)
 
             return action
@@ -181,7 +181,6 @@ class AgentLearner:
 
         if self.train and len(self.batch_rewards) > 0 and self.done:
 
-            # First calculate the discounted rewards for each step
             batch_reward_length = len(self.batch_rewards)
             discounted_batch_rewards = self.batch_rewards.copy()
             for i in range(batch_reward_length):
@@ -197,7 +196,6 @@ class AgentLearner:
             self.batch_rewards = []
 
         if self.done:
-            # Done with episode. Reset stuff.
             self.episode_no += 1
 
             self.episode_rewards_list.append(np.sum(self.episode_rewards))
@@ -207,12 +205,11 @@ class AgentLearner:
             self.step = 0
 
             if self.episode_no % self.print_per_episode == 0:
-                print("{} of {} games won!".format(self.gamesWon, self.print_per_episode))
+                print("Episode {}: {} of {} games won! Average steps in last {} episodes {} +- {}".format(
+                    self.episode_no, self.gamesWon, self.print_per_episode, self.print_per_episode,
+                    np.mean(self.episode_steps_list[(self.episode_no - self.print_per_episode):self.episode_no]),
+                    np.std(self.episode_steps_list[(self.episode_no - self.print_per_episode):self.episode_no])))
                 self.gamesWon = 0
-                print("Episode {}: Average steps in last {} episodes".format(self.episode_no, self.print_per_episode),
-                      np.mean(self.episode_steps_list[(self.episode_no - self.print_per_episode):self.episode_no]), '+-',
-                      np.std(self.episode_steps_list[(self.episode_no - self.print_per_episode):self.episode_no])
-                      )
 
 
 if __name__ == "__main__":

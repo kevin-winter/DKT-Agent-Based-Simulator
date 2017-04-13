@@ -1,6 +1,7 @@
-from Property import Property
 import numpy as np
-from game_constants import *
+
+from simulator.Property import Property
+from simulator.simulation_constants import *
 
 
 class Agent:

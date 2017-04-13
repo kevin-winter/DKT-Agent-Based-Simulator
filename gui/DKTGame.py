@@ -2,15 +2,16 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')
-from Simulator import Simulator
 import matplotlib.backends.backend_agg as agg
-import numpy as np
-import pygame
+
 from pygame.locals import *
 from time import sleep
 import sys
-from game_constants import *
-from Property import Property
+
+from gui.game_constants import *
+from simulator.simulation_constants import *
+from simulator.Simulator import Simulator
+from simulator.Property import Property
 
 
 class DKTGame:
@@ -63,7 +64,7 @@ class DKTGame:
                         self.BOARD.blit(nrHouses, offset(fieldLocs[p.id], scale((6, 6))))
 
     def plotResults(self):
-        fig = self.s.plotStats()
+        fig = self.s.plotStats(SCALE)
         canvas = agg.FigureCanvasAgg(fig)
         canvas.draw()
         raw_data = canvas.get_renderer().tostring_rgb()

@@ -1,6 +1,7 @@
 import numpy as np
 PROPERTY, BUSINESS, ROUTE = 0, 1, 2
 
+
 class Property:
 
     def __init__(self, simulator, id, rent, price, partners, type):

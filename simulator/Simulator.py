@@ -1,9 +1,10 @@
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from Agent import Agent
-from Property import Property
-from game_constants import *
+import numpy as np
+
+from simulator.Property import Property
+from simulator.Agent import Agent
+
 BANK, RISK = 0, 1
 
 class Simulator:
@@ -49,7 +50,7 @@ class Simulator:
             if winner: break
 
         if showResults:
-            fig = self.plotStats()
+            self.plotStats(1)
             plt.show()
         return winner
 
@@ -69,8 +70,8 @@ class Simulator:
         self.networthtime.append([p.netWorth() for p in self.players])
         self.rentworthtime.append([p.rentWorth() for p in self.players])
 
-    def plotStats(self):
-        mpl.rcParams['figure.figsize'] = np.array([6.4/SCALE, 6.4/SCALE])
+    def plotStats(self, scale):
+        mpl.rcParams['figure.figsize'] = np.array([6.4/scale, 6.4/scale])
         plt.close("all")
         fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, facecolor='white')
         fig.suptitle("Game Results", size=16)
