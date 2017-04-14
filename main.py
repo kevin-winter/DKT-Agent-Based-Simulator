@@ -5,7 +5,7 @@ from learner.AgentLearner import AgentLearner
 nrPlayers = 2
 maxRounds = 1000
 
-rf_learning = True
+rf_learning = False
 gui = True
 
 if rf_learning:
